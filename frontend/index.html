@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Registry & Management System</title>
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom CSS stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+  <div class="app-container">
+    <!-- Sidebar / Navigation -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <div>
+          <h1>Auth<span class="highlight">Flow</span></h1>
+          <p class="subtitle">Secure CRUD Administration</p>
+        </div>
+      </div>
+
+      <nav class="tab-navigation">
+        <button class="nav-tab active" id="tab-btn-register" onclick="switchTab('register')">
+          <i class="fa-solid fa-user-plus"></i> Registration Form
+        </button>
+        <button class="nav-tab" id="tab-btn-directory" onclick="switchTab('directory')">
+          <i class="fa-solid fa-users-gear"></i> User Directory
+          <span class="user-badge-count" id="badge-count">0</span>
+        </button>
+      </nav>
+      
+      <div class="system-status">
+        <span class="status-indicator online"></span>
+        <span class="status-text">Server Connected</span>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+      
+      <!-- SECTION: REGISTRATION FORM TAB -->
+      <section id="tab-content-register" class="tab-pane active">
+        <div class="form-container glassmorphism">
+          <div class="form-header">
+            <h2>Create New Profile</h2>
+            <p>Fill in the details below to register a new user in the system database.</p>
+          </div>
+          
+          <form id="registration-form" novalidate>
+            <!-- Full Name -->
+            <div class="form-group">
+              <label for="fullName">Full Name</label>
+              <div class="input-wrapper">
+                <i class="fa-regular fa-user input-icon"></i>
+                <input type="text" id="fullName" name="fullName" placeholder="John Doe" required>
+                <i class="fa-solid fa-circle-check validation-status valid"></i>
+                <i class="fa-solid fa-circle-exclamation validation-status invalid"></i>
+              </div>
+              <span class="error-msg" id="err-fullName">Please enter a valid full name (min 2 chars)</span>
+            </div>
+
+            <!-- Email Address -->
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <div class="input-wrapper">
+                <i class="fa-regular fa-envelope input-icon"></i>
+                <input type="email" id="email" name="email" placeholder="john.doe@example.com" required>
+                <i class="fa-solid fa-circle-check validation-status valid"></i>
+                <i class="fa-solid fa-circle-exclamation validation-status invalid"></i>
+              </div>
+              <span class="error-msg" id="err-email">Please enter a valid email address</span>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="form-group">
+              <label for="phone">Phone Number (Optional)</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-phone input-icon"></i>
+                <input type="tel" id="phone" name="phone" placeholder="+1 (555) 000-0000">
+                <i class="fa-solid fa-circle-check validation-status valid"></i>
+                <i class="fa-solid fa-circle-exclamation validation-status invalid"></i>
+              </div>
+              <span class="error-msg" id="err-phone">Must be a valid format: +1 (555) 555-5555 or local digits</span>
+            </div>
+
+            <div class="form-row">
+              <!-- User Role Selection -->
+              <div class="form-group">
+                <label for="role">Access Role</label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-id-card-clip input-icon"></i>
+                  <select id="role" name="role">
+                    <option value="Viewer">Viewer (Read Only)</option>
+                    <option value="Editor">Editor (Read & Write)</option>
+                    <option value="Admin">Admin (Full Control)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-lock input-icon"></i>
+                  <input type="password" id="password" name="password" placeholder="••••••••" required>
+                  <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password', this)">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                  <i class="fa-solid fa-circle-check validation-status valid"></i>
+                  <i class="fa-solid fa-circle-exclamation validation-status invalid"></i>
+                </div>
+                <span class="error-msg" id="err-password">Password must be at least 6 characters</span>
+              </div>
+            </div>
+
+            <!-- Agreement -->
+            <div class="form-checkbox-group">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="agreement" name="agreement" required>
+                <span class="checkmark"></span>
+                I authorize the storage and processing of my credentials
+              </label>
+              <span class="error-msg block-error" id="err-agreement">You must agree to register</span>
+            </div>
+
+            <!-- Form Actions -->
+            <button type="submit" class="btn btn-primary" id="btn-submit">
+              <span class="btn-text"><i class="fa-solid fa-arrow-right-to-bracket"></i> Register User</span>
+              <span class="spinner hidden"></span>
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- SECTION: DIRECTORY VIEW TAB -->
+      <section id="tab-content-directory" class="tab-pane">
+        
+        <!-- Summary Stats Cards -->
+        <div class="stats-grid">
+          <div class="stats-card glassmorphism">
+            <div class="stats-icon text-indigo">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="stats-info">
+              <h3 id="stat-total">0</h3>
+              <p>Total Profiles</p>
+            </div>
+          </div>
+          <div class="stats-card glassmorphism">
+            <div class="stats-icon text-emerald">
+              <i class="fa-solid fa-user-check"></i>
+            </div>
+            <div class="stats-info">
+              <h3 id="stat-active">0</h3>
+              <p>Active Users</p>
+            </div>
+          </div>
+          <div class="stats-card glassmorphism">
+            <div class="stats-icon text-amber">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <div class="stats-info">
+              <h3 id="stat-pending">0</h3>
+              <p>Pending Accounts</p>
+            </div>
+          </div>
+          <div class="stats-card glassmorphism">
+            <div class="stats-icon text-violet">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div class="stats-info">
+              <h3 id="stat-admin">0</h3>
+              <p>Administrators</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toolbar: Search, Filters & Reload -->
+        <div class="directory-toolbar glassmorphism">
+          <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="search-input" placeholder="Search by name or email..." oninput="filterUsers()">
+          </div>
+
+          <div class="filter-controls">
+            <div class="filter-select-wrapper">
+              <i class="fa-solid fa-filter filter-icon"></i>
+              <select id="filter-role" onchange="filterUsers()">
+                <option value="ALL">All Roles</option>
+                <option value="Admin">Admins</option>
+                <option value="Editor">Editors</option>
+                <option value="Viewer">Viewers</option>
+              </select>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="fetchUsers()" title="Reload Directory">
+              <i class="fa-solid fa-rotate"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Users Data Table Container -->
+        <div class="table-container glassmorphism">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Profile Info</th>
+                <th>Phone Number</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Date Registered</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <!-- Populated dynamically via JS -->
+              <tr>
+                <td colspan="6" class="table-loading">
+                  <span class="spinner"></span> Loading registered directories...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- Empty State -->
+          <div id="empty-state" class="empty-state hidden">
+            <div class="empty-icon"><i class="fa-solid fa-users-slash"></i></div>
+            <h3>No users found</h3>
+            <p>Adjust your search criteria or register a new user to populate the database.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- EDIT PROFILE MODAL (CRUD - UPDATE) -->
+  <div id="edit-modal" class="modal-overlay">
+    <div class="modal-content glassmorphism">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-user-pen"></i> Edit User Profile</h3>
+        <button class="modal-close-btn" onclick="closeEditModal()">&times;</button>
+      </div>
+      
+      <form id="edit-form">
+        <input type="hidden" id="edit-user-id">
+        
+        <div class="form-group">
+          <label for="edit-fullName">Full Name</label>
+          <div class="input-wrapper">
+            <i class="fa-regular fa-user input-icon"></i>
+            <input type="text" id="edit-fullName" name="fullName" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-phone">Phone Number</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-phone input-icon"></i>
+            <input type="tel" id="edit-phone" name="phone">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-role">Access Role</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-id-card-clip input-icon"></i>
+              <select id="edit-role" name="role">
+                <option value="Viewer">Viewer (Read Only)</option>
+                <option value="Editor">Editor (Read & Write)</option>
+                <option value="Admin">Admin (Full Control)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-status">Account Status</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-toggle-on input-icon"></i>
+              <select id="edit-status" name="status">
+                <option value="Active">Active</option>
+                <option value="Pending">Pending</option>
+                <option value="Suspended">Suspended</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-edit-save">
+            <span class="btn-text">Save Updates</span>
+            <span class="spinner hidden"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application logic file -->
+  <script src="app.js"></script>
+</body>
+</html>

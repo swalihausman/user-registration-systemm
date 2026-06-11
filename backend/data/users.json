@@ -1,0 +1,47 @@
+[
+  {
+    "id": "e4b9bbd0-c3d6-4e56-9d32-d8199b0c2cb1",
+    "fullName": "Alexander Wright",
+    "email": "alex.wright@example.com",
+    "phone": "+1 (555) 234-5678",
+    "role": "Admin",
+    "status": "Active",
+    "createdAt": "2026-06-10T14:30:00.000Z"
+  },
+  {
+    "id": "18f95c8c-687c-4ab4-8fb3-3d07e6005c2a",
+    "fullName": "Sarah Jenkins",
+    "email": "sarah.j@example.com",
+    "phone": "+1 (555) 876-5432",
+    "role": "Editor",
+    "status": "Active",
+    "createdAt": "2026-06-11T09:15:00.000Z"
+  },
+  {
+    "id": "7dc96fb3-57c2-4cb6-88a4-0ef6d3d95cf3",
+    "fullName": "Michael Chen",
+    "email": "m.chen@example.com",
+    "phone": "+1 (555) 345-6789",
+    "role": "Viewer",
+    "status": "Pending",
+    "createdAt": "2026-06-11T12:00:00.000Z"
+  },
+  {
+    "id": "edd88afa-865d-4c60-96c8-ebe7934da9a1",
+    "fullName": "Updated Test User",
+    "email": "test.user@example.com",
+    "phone": "+1 (555) 111-1111",
+    "role": "Admin",
+    "status": "Suspended",
+    "createdAt": "2026-06-11T10:03:41.567Z"
+  },
+  {
+    "id": "480d21e2-4868-4a76-bb94-0b2e5284ae34",
+    "fullName": "swaliha",
+    "email": "swalihaspam@gmail.com",
+    "phone": "458155151515151",
+    "role": "Editor",
+    "status": "Active",
+    "createdAt": "2026-06-11T10:07:46.367Z"
+  }
+]
