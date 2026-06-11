@@ -2,210 +2,102 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 const DB_FILE = path.join(__dirname, 'data', 'users.json');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Helper function to read from JSON DB
-function readUsersDB() {
-  try {
-    if (!fs.existsSync(DB_FILE)) {
-      // Ensure folder exists
-      const dir = path.dirname(DB_FILE);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      fs.writeFileSync(DB_FILE, JSON.stringify([], null, 2));
-      return [];
-    }
-    const data = fs.readFileSync(DB_FILE, 'utf8');
-    return JSON.parse(data || '[]');
-  } catch (error) {
-    console.error('Error reading database file:', error);
+// Read users array from local file
+function readUsers() {
+  if (!fs.existsSync(DB_FILE)) {
+    // Create folder and empty file if missing
+    fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
+    fs.writeFileSync(DB_FILE, JSON.stringify([]));
     return [];
   }
+  const fileData = fs.readFileSync(DB_FILE, 'utf8');
+  return JSON.parse(fileData || '[]');
 }
 
-// Helper function to write to JSON DB
-function writeUsersDB(users) {
-  try {
-    const dir = path.dirname(DB_FILE);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(DB_FILE, JSON.stringify(users, null, 2));
-    return true;
-  } catch (error) {
-    console.error('Error writing to database file:', error);
-    return false;
-  }
+// Write users array to local file
+function writeUsers(users) {
+  fs.writeFileSync(DB_FILE, JSON.stringify(users, null, 2));
 }
 
-// Validation Regex patterns
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^\+?[\d\s\-()]{7,20}$/;
-
-// --- REST API ENDPOINTS ---
-
-// 1. GET ALL USERS (Read)
+// 1. GET: Read all users
 app.get('/api/users', (req, res) => {
-  console.log('GET /api/users requested');
-  const users = readUsersDB();
-  // Return users sorted by creation date (newest first)
-  const sortedUsers = users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  res.json(sortedUsers);
+  const users = readUsers();
+  res.json(users);
 });
 
-// 2. GET SINGLE USER (Read)
-app.get('/api/users/:id', (req, res) => {
-  const { id } = req.params;
-  console.log(`GET /api/users/${id} requested`);
-  const users = readUsersDB();
-  const user = users.find(u => u.id === id);
-  
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-  
-  res.json(user);
-});
-
-// 3. CREATE USER / REGISTER (Create)
+// 2. POST: Create a new user
 app.post('/api/users', (req, res) => {
-  console.log('POST /api/users registration attempt:', req.body);
-  const { fullName, email, phone, role, password } = req.body;
-  const users = readUsersDB();
+  const { fullName, email, phone, role } = req.body;
+  const users = readUsers();
 
-  // Basic validation checks
-  if (!fullName || !fullName.trim()) {
-    return res.status(400).json({ error: 'Full Name is required' });
+  // Basic validation check
+  if (!fullName || !email) {
+    return res.status(400).json({ error: 'Name and Email are required!' });
   }
 
-  if (!email || !email.trim()) {
-    return res.status(400).json({ error: 'Email is required' });
-  }
-
-  if (!EMAIL_REGEX.test(email)) {
-    return res.status(400).json({ error: 'Invalid email format' });
-  }
-
-  // Check for unique email
-  if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-    return res.status(400).json({ error: 'Email is already registered' });
-  }
-
-  if (phone && !PHONE_REGEX.test(phone)) {
-    return res.status(400).json({ error: 'Invalid phone number format' });
-  }
-
-  if (!password || password.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters long' });
-  }
-
-  // Create new user object (do not save password in the clear for standard API response,
-  // in production we would hash it using bcrypt)
+  // Create user object
   const newUser = {
-    id: uuidv4(),
-    fullName: fullName.trim(),
-    email: email.trim().toLowerCase(),
-    phone: phone ? phone.trim() : '',
-    role: role || 'Viewer',
-    status: 'Active',
-    createdAt: new Date().toISOString()
+    id: Date.now().toString(), // Simple unique ID using timestamp
+    fullName,
+    email,
+    phone: phone || '',
+    role: role || 'Viewer'
   };
 
   users.push(newUser);
-  const success = writeUsersDB(users);
-
-  if (!success) {
-    return res.status(500).json({ error: 'Database error. Could not register user.' });
-  }
+  writeUsers(users);
 
   res.status(201).json(newUser);
 });
 
-// 4. UPDATE USER (Update)
+// 3. PUT: Update an existing user
 app.put('/api/users/:id', (req, res) => {
   const { id } = req.params;
-  console.log(`PUT /api/users/${id} update attempt:`, req.body);
-  const { fullName, phone, role, status } = req.body;
-  const users = readUsersDB();
+  const { fullName, email, phone, role } = req.body;
+  const users = readUsers();
 
   const userIndex = users.findIndex(u => u.id === id);
   if (userIndex === -1) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.status(404).json({ error: 'User not found!' });
   }
 
-  const user = users[userIndex];
+  // Update fields
+  users[userIndex].fullName = fullName || users[userIndex].fullName;
+  users[userIndex].email = email || users[userIndex].email;
+  users[userIndex].phone = phone !== undefined ? phone : users[userIndex].phone;
+  users[userIndex].role = role || users[userIndex].role;
 
-  // Validation
-  if (fullName && !fullName.trim()) {
-    return res.status(400).json({ error: 'Full Name cannot be empty' });
-  }
-
-  if (phone && !PHONE_REGEX.test(phone)) {
-    return res.status(400).json({ error: 'Invalid phone number format' });
-  }
-
-  const validRoles = ['Admin', 'Editor', 'Viewer'];
-  if (role && !validRoles.includes(role)) {
-    return res.status(400).json({ error: 'Invalid role selection' });
-  }
-
-  const validStatuses = ['Active', 'Pending', 'Suspended'];
-  if (status && !validStatuses.includes(status)) {
-    return res.status(400).json({ error: 'Invalid status selection' });
-  }
-
-  // Update details
-  if (fullName) user.fullName = fullName.trim();
-  if (phone !== undefined) user.phone = phone.trim();
-  if (role) user.role = role;
-  if (status) user.status = status;
-
-  users[userIndex] = user;
-  const success = writeUsersDB(users);
-
-  if (!success) {
-    return res.status(500).json({ error: 'Database error. Could not update user.' });
-  }
-
-  res.json(user);
+  writeUsers(users);
+  res.json(users[userIndex]);
 });
 
-// 5. DELETE USER (Delete)
+// 4. DELETE: Delete a user
 app.delete('/api/users/:id', (req, res) => {
   const { id } = req.params;
-  console.log(`DELETE /api/users/${id} requested`);
-  const users = readUsersDB();
+  let users = readUsers();
 
   const userIndex = users.findIndex(u => u.id === id);
   if (userIndex === -1) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.status(404).json({ error: 'User not found!' });
   }
 
-  // Remove user
+  // Remove the user
   const deletedUser = users.splice(userIndex, 1)[0];
-  const success = writeUsersDB(users);
+  writeUsers(users);
 
-  if (!success) {
-    return res.status(500).json({ error: 'Database error. Could not delete user.' });
-  }
-
-  res.json({ message: 'User deleted successfully', user: deletedUser });
+  res.json({ message: 'User deleted successfully!', user: deletedUser });
 });
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`=========================================`);
   console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`REST API endpoints active at /api/users`);
-  console.log(`Database seeded at: ${DB_FILE}`);
-  console.log(`=========================================`);
 });
